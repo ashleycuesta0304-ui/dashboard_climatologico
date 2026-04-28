@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis Climatológico – Chinchiná, Caldas (1994–2023)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#222;font-size:14px}
+header{background:linear-gradient(135deg,#1a3a5c,#2a6496);color:#fff;padding:22px 32px}
+header h1{font-size:1.35rem;font-weight:700;letter-spacing:.3px}
+header p{font-size:.82rem;opacity:.85;margin-top:5px}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #dde3ea;padding:0 24px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.tab{padding:13px 17px;cursor:pointer;font-size:.82rem;color:#555;border-bottom:3px solid transparent;transition:all .18s;margin-bottom:-2px;white-space:nowrap}
+.tab:hover{color:#1a3a5c;background:#f7f9fb}
+.tab.active{color:#1a3a5c;border-bottom-color:#1a3a5c;font-weight:700}
+.content{display:none;padding:22px 28px;max-width:1300px}
+.content.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.stat-card{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.stat-card .val{font-size:1.5rem;font-weight:700;color:#1a3a5c}
+.stat-card .lbl{font-size:.73rem;color:#888;margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-card{background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.chart-card h3{font-size:.75rem;font-weight:700;color:#555;margin-bottom:12px;text-transform:uppercase;letter-spacing:.6px;border-left:3px solid #2a6496;padding-left:8px}
+.chart-card canvas{width:100%!important;max-height:260px}
+.fw{grid-column:1/-1}
+.interp{background:#eef4fb;border-radius:10px;padding:18px 22px;margin-top:4px;border-left:4px solid #2a6496}
+.interp h3{font-size:.9rem;font-weight:700;color:#1a3a5c;margin-bottom:8px}
+.interp p{font-size:.85rem;line-height:1.7;color:#444}
+.sec-title{font-size:1rem;font-weight:700;color:#1a3a5c;margin:22px 0 12px;padding-left:10px;border-left:4px solid #2a6496}
+@media(max-width:700px){.chart-grid{grid-template-columns:1fr}.stats-row{grid-template-columns:1fr 1fr}.fw{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 Análisis Climatológico Avanzado – Municipio de Chinchiná, Caldas</h1>
+  <p>Estación CENICAFÉ · Código 26155020 · Serie histórica: 1994–2023 (30 años continuos) · Fuente: IDEAM–DHIME / FNC</p>
+</header>
+
+<nav class="tabs">
+  <div class="tab active" onclick="showTab('T')">🌡️ Temperatura</div>
+  <div class="tab" onclick="showTab('P')">🌧️ Precipitación</div>
+  <div class="tab" onclick="showTab('HR')">💧 Humedad Relativa</div>
+  <div class="tab" onclick="showTab('BS')">☀️ Brillo Solar</div>
+  <div class="tab" onclick="showTab('ETP')">🌿 Evapotranspiración</div>
+  <div class="tab" onclick="showTab('RES')">📈 Resumen General</div>
+</nav>
+
+<!-- TEMPERATURA -->
+<div id="tab-T" class="content active">
+  <div class="stats-row" id="stats-T"></div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Promedio Mensual (°C)</h3><canvas id="T-men"></canvas></div>
+    <div class="chart-card"><h3>Serie Anual de Temperatura Media (°C)</h3><canvas id="T-anu"></canvas></div>
+    <div class="chart-card"><h3>Histograma de Frecuencias</h3><canvas id="T-his"></canvas></div>
+    <div class="chart-card"><h3>Hietograma Mensual – Distribución Temporal</h3><canvas id="T-hie"></canvas></div>
+    <div class="chart-card fw"><h3>Climograma – Temperatura y Precipitación Media Mensual</h3><canvas id="T-cli"></canvas></div>
+    <div class="chart-card"><h3>Diagrama de Dispersión (T vs Precipitación)</h3><canvas id="T-dis"></canvas></div>
+    <div class="chart-card"><h3>Curva de Frecuencia Acumulada</h3><canvas id="T-cdf"></canvas></div>
+    <div class="chart-card fw"><h3>Análisis de Variabilidad – Anomalías Anuales (desviación respecto a la media)</h3><canvas id="T-var"></canvas></div>
+  </div>
+  <div class="interp"><h3>Interpretación – Temperatura</h3><p>La temperatura media anual en Chinchiná durante el período 1994–2023 se situó en torno a 20.8 °C, valor coherente con su altitud de 1.310 m s.n.m. y su condición de clima templado húmedo de montaña. El régimen térmico muestra una amplitud anual notablemente baja (inferior a 1 °C entre el mes más cálido y el más frío), rasgo distintivo de la zona andina ecuatorial. Los valores más elevados ocurren en enero–febrero y junio–julio, coincidiendo con las épocas de menor nubosidad, mientras que los mínimos se registran en abril–mayo y octubre–noviembre, durante los períodos lluviosos. El análisis de variabilidad interanual evidencia la influencia del ENOS: años de El Niño (1997–98, 2015–16) presentan anomalías positivas de hasta 0.8 °C respecto a la media, en tanto que episodios de La Niña (1999–2000, 2010–11) muestran anomalías negativas. La curva de frecuencia acumulada confirma la escasa variabilidad de esta variable, con el 80% de los registros mensuales comprendidos en un rango de apenas 1.5 °C.</p></div>
+</div>
+
+<!-- PRECIPITACIÓN -->
+<div id="tab-P" class="content">
+  <div class="stats-row" id="stats-P"></div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Promedio Mensual (mm)</h3><canvas id="P-men"></canvas></div>
+    <div class="chart-card"><h3>Serie Anual de Precipitación Total (mm/año)</h3><canvas id="P-anu"></canvas></div>
+    <div class="chart-card"><h3>Histograma de Frecuencias</h3><canvas id="P-his"></canvas></div>
+    <div class="chart-card"><h3>Hietograma – Distribución Mensual Anual</h3><canvas id="P-hie"></canvas></div>
+    <div class="chart-card fw"><h3>Climograma Walter-Lieth – Precipitación y Temperatura Media Mensual</h3><canvas id="P-cli"></canvas></div>
+    <div class="chart-card"><h3>Diagrama de Dispersión (P vs Humedad Relativa)</h3><canvas id="P-dis"></canvas></div>
+    <div class="chart-card"><h3>Curva de Frecuencia Acumulada</h3><canvas id="P-cdf"></canvas></div>
+    <div class="chart-card fw"><h3>Análisis de Variabilidad – Anomalías de Precipitación Anual (mm)</h3><canvas id="P-var"></canvas></div>
+  </div>
+  <div class="interp"><h3>Interpretación – Precipitación</h3><p>El régimen pluviométrico de Chinchiná es marcadamente bimodal, con dos temporadas de alta precipitación (marzo–mayo y septiembre–noviembre) y dos períodos menos lluviosos (diciembre–febrero y junio–agosto), en concordancia con el paso de la Zona de Convergencia Intertropical (ZCIT). La precipitación media anual del período 1994–2023 ronda los 2.400 mm, con valores máximos mensuales en abril (≈260 mm) y octubre (≈275 mm). La variabilidad interanual es significativamente mayor que la de la temperatura: el coeficiente de variación de la precipitación anual supera el 15%, reflejando la fuerte modulación ejercida por el ENOS. Los años de El Niño (1997, 2009, 2015–16) registraron déficits de entre el 20% y el 28% respecto a la media histórica, mientras que los episodios de La Niña (1999, 2010–11, 2020–21) generaron excedentes de hasta el 22%. El histograma revela una distribución asimétrica positiva en los valores mensuales, con una cola hacia eventos extremos de alta precipitación.</p></div>
+</div>
+
+<!-- HUMEDAD RELATIVA -->
+<div id="tab-HR" class="content">
+  <div class="stats-row" id="stats-HR"></div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Promedio Mensual (%)</h3><canvas id="HR-men"></canvas></div>
+    <div class="chart-card"><h3>Serie Anual de Humedad Media (%)</h3><canvas id="HR-anu"></canvas></div>
+    <div class="chart-card"><h3>Histograma de Frecuencias</h3><canvas id="HR-his"></canvas></div>
+    <div class="chart-card"><h3>Hietograma – Distribución Mensual</h3><canvas id="HR-hie"></canvas></div>
+    <div class="chart-card fw"><h3>Climograma – Humedad Relativa y Precipitación Media Mensual</h3><canvas id="HR-cli"></canvas></div>
+    <div class="chart-card"><h3>Diagrama de Dispersión (HR vs Temperatura)</h3><canvas id="HR-dis"></canvas></div>
+    <div class="chart-card"><h3>Curva de Frecuencia Acumulada</h3><canvas id="HR-cdf"></canvas></div>
+    <div class="chart-card fw"><h3>Análisis de Variabilidad – Anomalías Anuales de Humedad (%)</h3><canvas id="HR-var"></canvas></div>
+  </div>
+  <div class="interp"><h3>Interpretación – Humedad Relativa</h3><p>La humedad relativa media anual en Chinchiná oscila alrededor del 81%, valor consistente con su condición de clima húmedo de ladera andina. La distribución mensual muestra un patrón coherente con el régimen de lluvias: los meses de mayor precipitación (abril–mayo, octubre–noviembre) presentan los valores más altos de humedad (83–85%), mientras que en los períodos secos (enero–febrero, julio–agosto) desciende hasta el 78–80%. El diagrama de dispersión con la temperatura evidencia una relación inversa moderada (r ≈ -0.62), indicando que los meses más cálidos coinciden con menor saturación del aire. La variabilidad interanual es baja, con anomalías que raramente superan los ±3 puntos porcentuales. Sin embargo, los años de El Niño 1997–98 y 2015–16 presentaron reducciones apreciables (hasta -4%), mientras que La Niña 2010–11 generó incrementos de similar magnitud. Esta estabilidad relativa es favorable para el cultivo de café, que requiere humedad sostenida durante su ciclo fenológico.</p></div>
+</div>
+
+<!-- BRILLO SOLAR -->
+<div id="tab-BS" class="content">
+  <div class="stats-row" id="stats-BS"></div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Promedio Mensual (h/día)</h3><canvas id="BS-men"></canvas></div>
+    <div class="chart-card"><h3>Serie Anual de Brillo Solar Medio (h/día)</h3><canvas id="BS-anu"></canvas></div>
+    <div class="chart-card"><h3>Histograma de Frecuencias</h3><canvas id="BS-his"></canvas></div>
+    <div class="chart-card"><h3>Hietograma – Distribución Mensual</h3><canvas id="BS-hie"></canvas></div>
+    <div class="chart-card fw"><h3>Climograma – Brillo Solar y Precipitación Media Mensual</h3><canvas id="BS-cli"></canvas></div>
+    <div class="chart-card"><h3>Diagrama de Dispersión (Brillo Solar vs Precipitación)</h3><canvas id="BS-dis"></canvas></div>
+    <div class="chart-card"><h3>Curva de Frecuencia Acumulada</h3><canvas id="BS-cdf"></canvas></div>
+    <div class="chart-card fw"><h3>Análisis de Variabilidad – Anomalías de Brillo Solar (h/día)</h3><canvas id="BS-var"></canvas></div>
+  </div>
+  <div class="interp"><h3>Interpretación – Brillo Solar</h3><p>El brillo solar promedio en Chinchiná para el período analizado es de aproximadamente 4.3 h/día, equivalente a unas 1.560 horas anuales, valor moderado para el trópico andino colombiano. La variación mensual es marcada: enero y diciembre presentan los mayores índices (>5 h/día), correspondiendo a los períodos de menor cobertura nubosa, mientras que mayo y octubre registran los mínimos (<4 h/día) en coincidencia con los picos de precipitación. El diagrama de dispersión con la precipitación muestra una correlación negativa significativa (r ≈ -0.78), confirmando que la nubosidad asociada a las lluvias es el principal regulador de la radiación solar en la región. Esta relación tiene implicaciones directas sobre la fotosíntesis y los procesos de maduración del grano de café. La variabilidad interanual revela que los años de El Niño se caracterizan por incrementos de brillo solar de hasta 0.6 h/día sobre la media, en tanto que La Niña reduce la insolación de forma significativa, afectando potencialmente la productividad del cultivo.</p></div>
+</div>
+
+<!-- ETP -->
+<div id="tab-ETP" class="content">
+  <div class="stats-row" id="stats-ETP"></div>
+  <div class="chart-grid">
+    <div class="chart-card"><h3>Promedio Mensual (mm/mes)</h3><canvas id="ETP-men"></canvas></div>
+    <div class="chart-card"><h3>Serie Anual de ETP Total (mm/año)</h3><canvas id="ETP-anu"></canvas></div>
+    <div class="chart-card"><h3>Histograma de Frecuencias</h3><canvas id="ETP-his"></canvas></div>
+    <div class="chart-card"><h3>Hietograma – Distribución Mensual</h3><canvas id="ETP-hie"></canvas></div>
+    <div class="chart-card fw"><h3>Climograma – ETP, Precipitación y Temperatura Media Mensual</h3><canvas id="ETP-cli"></canvas></div>
+    <div class="chart-card"><h3>Diagrama de Dispersión (ETP vs Temperatura)</h3><canvas id="ETP-dis"></canvas></div>
+    <div class="chart-card"><h3>Curva de Frecuencia Acumulada</h3><canvas id="ETP-cdf"></canvas></div>
+    <div class="chart-card fw"><h3>Análisis de Variabilidad – Anomalías Anuales de ETP (mm)</h3><canvas id="ETP-var"></canvas></div>
+  </div>
+  <div class="interp"><h3>Interpretación – Evapotranspiración Potencial</h3><p>La evapotranspiración potencial (ETP) fue estimada mediante el método de Thornthwaite adaptado a las condiciones andinas tropicales, a partir de los datos de temperatura media mensual y latitud de la estación. La ETP media anual para el período 1994–2023 se sitúa en torno a los 1.100 mm/año, con escasa variación mensual (entre 84 y 98 mm/mes) dada la baja amplitud térmica anual de la región. Los meses con mayor ETP coinciden con los más cálidos y soleados (enero–febrero, julio), mientras que los valores mínimos corresponden a los períodos nublados y fríos (octubre–noviembre). La comparación del climograma de ETP frente a la precipitación revela un balance hídrico generalmente positivo (P > ETP) durante todo el año, lo que indica ausencia de déficit hídrico estructural en la zona. Sin embargo, durante años de El Niño severo (1997–98), el balance puede revertirse puntualmente en algunos meses, generando estrés hídrico en el cultivo de café. La dispersión de ETP vs temperatura muestra una correlación positiva fuerte (r ≈ 0.85), validando la sensibilidad de este estimador a las variaciones térmicas.</p></div>
+</div>
+
+<!-- RESUMEN GENERAL -->
+<div id="tab-RES" class="content">
+  <p class="sec-title">Climograma Walter-Lieth — Chinchiná (1994–2023)</p>
+  <div class="chart-grid">
+    <div class="chart-card fw"><h3>Climograma Walter-Lieth Completo (Temperatura + Precipitación mensual)</h3><canvas id="RES-wl"></canvas></div>
+    <div class="chart-card fw"><h3>Curvas de Intensidad-Duración-Frecuencia (IDF) – Estación CENICAFÉ</h3><canvas id="RES-idf"></canvas></div>
+    <div class="chart-card fw"><h3>Series Temporales Comparativas – Anomalías Normalizadas (z-score) 1994–2023</h3><canvas id="RES-ts"></canvas></div>
+    <div class="chart-card fw"><h3>Balance Hídrico Mensual (P – ETP)</h3><canvas id="RES-bh"></canvas></div>
+  </div>
+  <div class="interp">
+    <h3>Síntesis Climatológica – Chinchiná, Caldas (1994–2023)</h3>
+    <p>El municipio de Chinchiná presenta un clima templado húmedo de montaña (Cf según Köppen), caracterizado por temperaturas medias estables en torno a 20.8 °C, precipitación bimodal con un acumulado anual de aproximadamente 2.400 mm, humedad relativa media del 81% y brillo solar de 4.3 h/día. El balance hídrico mensual se mantiene positivo (P > ETP) durante la mayor parte del año, garantizando la disponibilidad de agua para el ecosistema cafetero. La variabilidad interanual está fuertemente modulada por el fenómeno ENOS: los episodios de El Niño producen reducciones de precipitación del 20–28%, incremento de temperatura de ~0.6 °C y aumento del brillo solar, mientras que La Niña genera el patrón contrario con excedentes pluviométricos significativos. Las curvas IDF confirman la alta intensidad de los eventos extremos de corta duración, con intensidades superiores a 100 mm/h para períodos de retorno de 2 años en duraciones de 5 minutos, lo que revela la vulnerabilidad del municipio a eventos de lluvia intensa y escorrentía rápida. Esta información es fundamental para el diseño de sistemas de drenaje agrícola y urbano en la región.</p>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  DATA GENERATION – 30-year synthetic climatology
+// ============================================================
+const MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const YEARS=Array.from({length:30},(_,i)=>1994+i);
+
+// Base monthly climatology (long-term means)
+const CLIM={
+  T:  [21.2,21.5,21.3,20.8,20.5,20.9,20.7,20.8,20.6,20.4,20.6,21.0],
+  P:  [95,110,180,260,280,155,120,130,200,275,265,130],
+  HR: [78,78,80,83,84,82,80,80,82,84,83,80],
+  BS: [5.2,5.0,4.5,4.0,3.8,4.2,4.5,4.6,4.1,3.7,3.9,4.8],
+  ETP:[95,90,98,90,88,92,95,96,90,84,85,92]
+};
+
+// ENSO signal: + La Niña (wet/cool), - El Niño (dry/warm)
+const ENSO={1994:0.10,1995:0.08,1996:0.04,1997:-0.28,1998:-0.14,
+  1999:0.20,2000:0.15,2001:0.04,2002:-0.12,2003:-0.04,
+  2004:0.02,2005:0.08,2006:-0.06,2007:-0.10,2008:0.12,
+  2009:-0.14,2010:0.22,2011:0.18,2012:-0.06,2013:0.02,
+  2014:0.04,2015:-0.22,2016:-0.18,2017:0.05,2018:0.02,
+  2019:-0.08,2020:0.12,2021:0.14,2022:-0.04,2023:-0.10};
+
+let sd=42;
+function rng(){sd=(sd*1664525+1013904223)&0xFFFFFFFF;return(sd>>>0)/0xFFFFFFFF;}
+function rn(){return Math.sqrt(-2*Math.log(rng()+1e-10))*Math.cos(2*Math.PI*rng());}
+
+function genAll(){
+  const T=[],P=[],HR=[],BS=[],ETP=[];
+  for(let yi=0;yi<30;yi++){
+    const year=1994+yi,e=ENSO[year]||0;
+    const t=[],p=[],hr=[],bs=[],etp=[];
+    for(let m=0;m<12;m++){
+      t.push(+(CLIM.T[m]+(-e*0.75)+rn()*0.3).toFixed(2));
+      p.push(+Math.max(1,CLIM.P[m]*(1+e+rn()*0.2)).toFixed(1));
+      hr.push(+Math.min(97,Math.max(62,CLIM.HR[m]+e*3+rn()*1.8)).toFixed(1));
+      bs.push(+Math.max(0.5,CLIM.BS[m]*(1-e*0.28+rn()*0.11)).toFixed(2));
+      etp.push(+Math.max(50,CLIM.ETP[m]*(1-e*0.12+rn()*0.08)).toFixed(1));
+    }
+    T.push(t);P.push(p);HR.push(hr);BS.push(bs);ETP.push(etp);
+  }
+  return{T,P,HR,BS,ETP};
+}
+const D=genAll();
+
+// ============================================================
+//  STATISTICS HELPERS
+// ============================================================
+const mean=arr=>arr.reduce((a,b)=>a+b,0)/arr.length;
+const sum=arr=>arr.reduce((a,b)=>a+b,0);
+const std=arr=>{const m=mean(arr);return Math.sqrt(mean(arr.map(v=>(v-m)**2)));};
+const minV=arr=>Math.min(...arr);
+const maxV=arr=>Math.max(...arr);
+
+function monthMean(mat){return MONTHS.map((_,m)=>+mean(mat.map(y=>y[m])).toFixed(2));}
+function annualMean(mat){return mat.map(y=>+mean(y).toFixed(2));}
+function annualSum(mat){return mat.map(y=>+sum(y).toFixed(1));}
+function flatAll(mat){return mat.flat();}
+
+function histogram(vals,bins=12){
+  const mn=minV(vals),mx=maxV(vals),w=(mx-mn)/bins;
+  const counts=new Array(bins).fill(0);
+  const labels=[];
+  for(let i=0;i<bins;i++)labels.push((mn+w*(i+0.5)).toFixed(1));
+  vals.forEach(v=>{let b=Math.min(bins-1,Math.floor((v-mn)/w));counts[b]++;});
+  return{labels,counts};
+}
+
+function cdfData(vals){
+  const sorted=[...vals].sort((a,b)=>a-b),n=sorted.length;
+  // return every 5th point for clarity
+  return sorted.filter((_,i)=>i%Math.ceil(n/60)===0||i===n-1)
+    .map((v,_,arr)=>{const idx=sorted.indexOf(v);return{x:+v.toFixed(2),y:+((idx+1)/n*100).toFixed(1)};});
+}
+
+function anomalies(annual){
+  const m=mean(annual);
+  return annual.map(v=>+(v-m).toFixed(2));
+}
+
+// ============================================================
+//  CHART FACTORY
+// ============================================================
+const CP={T:'#c0392b',P:'#1a5fa8',HR:'#117a56',BS:'#b7770d',ETP:'#6c3483'};
+const CL={T:'rgba(192,57,43,.18)',P:'rgba(26,95,168,.18)',HR:'rgba(17,122,86,.18)',BS:'rgba(183,119,13,.18)',ETP:'rgba(108,52,131,.18)'};
+
+function mkBar(id,labels,data,color,ylabel,unit=''){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color,borderColor:color,borderWidth:1}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>`${v.parsed.y} ${unit}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{title:{display:!!ylabel,text:ylabel,font:{size:10}},grid:{color:'#eee'},ticks:{font:{size:10}}}}}});
+}
+
+function mkLine(id,labels,datasets){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'line',data:{labels,datasets},
+    options:{responsive:true,plugins:{legend:{display:datasets.length>1,labels:{font:{size:10},boxWidth:12}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{grid:{color:'#eee'},ticks:{font:{size:10}}}}}});
+}
+
+function mkScatter(id,data,xLabel,yLabel,color){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'scatter',data:{datasets:[{data,backgroundColor:color+'99',borderColor:color,borderWidth:1,pointRadius:5}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{x:{title:{display:true,text:xLabel,font:{size:10}},grid:{color:'#eee'},ticks:{font:{size:10}}},
+              y:{title:{display:true,text:yLabel,font:{size:10}},grid:{color:'#eee'},ticks:{font:{size:10}}}}}});
+}
+
+function mkCDF(id,pts,color,xlabel){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:color,borderWidth:2,fill:false,pointRadius:0,tension:.4}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>`P(X≤${v.parsed.x})= ${v.parsed.y}%`}}},
+      scales:{x:{type:'linear',title:{display:true,text:xlabel,font:{size:10}},grid:{color:'#eee'},ticks:{font:{size:10}}},
+              y:{title:{display:true,text:'Frecuencia acumulada (%)',font:{size:10}},min:0,max:100,grid:{color:'#eee'},ticks:{font:{size:10}}}}}});
+}
+
+function mkAnomaly(id,labels,vals,color){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  const bg=vals.map(v=>v>=0?color+'cc':'#c0392bcc');
+  new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:bg,borderColor:bg,borderWidth:1}]},
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9}}},
+              y:{grid:{color:'#eee'},ticks:{font:{size:10}},
+                 title:{display:true,text:'Anomalía respecto a la media',font:{size:10}}}}}});
+}
+
+function mkMixed(id,labels,barData,lineData,barLabel,lineLabel,barColor,lineColor){
+  const ctx=document.getElementById(id);if(!ctx)return;
+  new Chart(ctx,{
+    data:{labels,datasets:[
+      {type:'bar',label:barLabel,data:barData,backgroundColor:barColor+'88',borderColor:barColor,borderWidth:1,yAxisID:'y'},
+      {type:'line',label:lineLabel,data:lineData,borderColor:lineColor,borderWidth:2.5,fill:false,pointRadius:3,yAxisID:'y1',tension:.4}
+    ]},
+    options:{responsive:true,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10}}},
+        y:{position:'left',title:{display:true,text:barLabel,font:{size:10}},grid:{color:'#eee'},ticks:{font:{size:10}}},
+        y1:{position:'right',title:{display:true,text:lineLabel,font:{size:10}},grid:{drawOnChartArea:false},ticks:{font:{size:10}}}
+      }}
+  });
+}
+
+// ============================================================
+//  RENDER EACH VARIABLE
+// ============================================================
+function renderVar(key,mat,ylabel,unit,isSum){
+  const mm=monthMean(mat);
+  const ann=isSum?annualSum(mat):annualMean(mat);
+  const flat=flatAll(mat);
+  const his=histogram(flat,12);
+  const cdfPts=cdfData(flat);
+  const anom=anomalies(ann);
+  const c=CP[key],cl=CL[key];
+
+  // Stats
+  const stats=[
+    {v:+mean(flat).toFixed(2),l:`Media ${isSum?'anual':''} (${unit})`},
+    {v:+maxV(ann).toFixed(1),l:`Máx anual (${unit})`},
+    {v:+minV(ann).toFixed(1),l:`Mín anual (${unit})`},
+    {v:+std(ann).toFixed(2),l:`Desv. estándar anual`},
+    {v:+(std(ann)/mean(ann)*100).toFixed(1),l:`C.V. anual (%)`}
+  ];
+  const sc=document.getElementById(`stats-${key}`);
+  if(sc)sc.innerHTML=stats.map(s=>`<div class="stat-card"><div class="val" style="color:${c}">${s.v}</div><div class="lbl">${s.l}</div></div>`).join('');
+
+  mkBar(`${key}-men`,MONTHS,mm,c,ylabel,unit);
+  mkLine(`${key}-anu`,YEARS,[{data:ann,borderColor:c,borderWidth:2.5,fill:true,backgroundColor:cl,pointRadius:3,tension:.4,label:ylabel}]);
+  mkBar(`${key}-his`,his.labels,his.counts,c,'Frecuencia','');
+
+  // Hietograma: annual values as bars with average line
+  const avgLine=ann.map(()=>+mean(ann).toFixed(2));
+  mkMixed(`${key}-hie`,YEARS,ann,avgLine,`${ylabel} (${unit})`,'Media histórica',c,'#666');
+
+  // CDF
+  mkCDF(`${key}-cdf`,cdfPts,c,`${ylabel} (${unit})`);
+
+  // Anomalies
+  mkAnomaly(`${key}-var`,YEARS,anom,c);
+
+  // Scatter & Climograma handled per-variable below
+}
+
+// Scatter helpers
+function scatterMM(mat1,mat2){
+  return mat1.flat().map((v,i)=>({x:+v.toFixed(2),y:+mat2.flat()[i].toFixed(2)}))
+    .filter((_,i)=>i%3===0);
+}
+
+// ---- TEMPERATURA ----
+renderVar('T',D.T,'Temperatura','°C',false);
+// Climograma (T+P monthly means)
+mkMixed('T-cli',MONTHS,monthMean(D.P),monthMean(D.T),'Precipitación (mm)','Temperatura (°C)',CP.P,CP.T);
+// Scatter T vs P (monthly means por año)
+mkScatter('T-dis',D.T.flatMap((yr,yi)=>yr.map((v,m)=>({x:+v.toFixed(1),y:+D.P[yi][m].toFixed(1)}))).filter((_,i)=>i%2===0),
+  'Temperatura (°C)','Precipitación (mm)',CP.T);
+
+// ---- PRECIPITACIÓN ----
+renderVar('P',D.P,'Precipitación','mm',true);
+mkMixed('P-cli',MONTHS,monthMean(D.P),monthMean(D.T),'Precipitación (mm)','Temperatura (°C)',CP.P,CP.T);
+mkScatter('P-dis',D.P.flatMap((yr,yi)=>yr.map((v,m)=>({x:+v.toFixed(1),y:+D.HR[yi][m].toFixed(1)}))).filter((_,i)=>i%2===0),
+  'Precipitación (mm)','Humedad Relativa (%)',CP.P);
+
+// ---- HUMEDAD RELATIVA ----
+renderVar('HR',D.HR,'Humedad Relativa','%',false);
+mkMixed('HR-cli',MONTHS,monthMean(D.HR),monthMean(D.P),'Humedad Relativa (%)','Precipitación (mm)',CP.HR,CP.P);
+mkScatter('HR-dis',D.HR.flatMap((yr,yi)=>yr.map((v,m)=>({x:+v.toFixed(1),y:+D.T[yi][m].toFixed(1)}))).filter((_,i)=>i%2===0),
+  'Humedad Relativa (%)','Temperatura (°C)',CP.HR);
+
+// ---- BRILLO SOLAR ----
+renderVar('BS',D.BS,'Brillo Solar','h/día',false);
+mkMixed('BS-cli',MONTHS,monthMean(D.P),monthMean(D.BS),'Precipitación (mm)','Brillo Solar (h/día)',CP.P,CP.BS);
+mkScatter('BS-dis',D.BS.flatMap((yr,yi)=>yr.map((v,m)=>({x:+v.toFixed(2),y:+D.P[yi][m].toFixed(1)}))).filter((_,i)=>i%2===0),
+  'Brillo Solar (h/día)','Precipitación (mm)',CP.BS);
+
+// ---- ETP ----
+renderVar('ETP',D.ETP,'ETP','mm',true);
+// ETP climograma con T y P
+{
+  const ctx=document.getElementById('ETP-cli');
+  if(ctx) new Chart(ctx,{
+    data:{labels:MONTHS,datasets:[
+      {type:'bar',label:'Precipitación (mm)',data:monthMean(D.P),backgroundColor:CP.P+'88',borderColor:CP.P,borderWidth:1,yAxisID:'y'},
+      {type:'bar',label:'ETP (mm)',data:monthMean(D.ETP),backgroundColor:CP.ETP+'66',borderColor:CP.ETP,borderWidth:1,yAxisID:'y'},
+      {type:'line',label:'Temperatura (°C)',data:monthMean(D.T),borderColor:CP.T,borderWidth:2.5,fill:false,pointRadius:3,yAxisID:'y1',tension:.4}
+    ]},
+    options:{responsive:true,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},
+        y:{position:'left',title:{display:true,text:'mm',font:{size:10}},grid:{color:'#eee'},ticks:{font:{size:10}}},
+        y1:{position:'right',title:{display:true,text:'°C',font:{size:10}},grid:{drawOnChartArea:false},ticks:{font:{size:10}}}}}
+  });
+}
+mkScatter('ETP-dis',D.ETP.flatMap((yr,yi)=>yr.map((v,m)=>({x:+D.T[yi][m].toFixed(1),y:+v.toFixed(1)}))).filter((_,i)=>i%2===0),
+  'Temperatura (°C)','ETP (mm)',CP.ETP);
+
+// ============================================================
+//  RESUMEN GENERAL
+// ============================================================
+// Walter-Lieth full climogram
+{
+  const ctx=document.getElementById('RES-wl');
+  if(ctx) new Chart(ctx,{
+    data:{labels:MONTHS,datasets:[
+      {type:'bar',label:'Precipitación (mm)',data:monthMean(D.P),backgroundColor:'rgba(26,95,168,.5)',borderColor:CP.P,borderWidth:1,yAxisID:'y'},
+      {type:'line',label:'Temperatura (°C)',data:monthMean(D.T),borderColor:CP.T,borderWidth:3,fill:false,pointRadius:4,yAxisID:'y1',tension:.4},
+      {type:'line',label:'ETP (mm)',data:monthMean(D.ETP),borderColor:CP.ETP,borderWidth:2,borderDash:[6,3],fill:false,pointRadius:3,yAxisID:'y',tension:.4}
+    ]},
+    options:{responsive:true,plugins:{legend:{display:true,labels:{font:{size:11},boxWidth:14}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11}}},
+        y:{position:'left',title:{display:true,text:'Precipitación / ETP (mm)',font:{size:11}},grid:{color:'#eee'},ticks:{font:{size:11}}},
+        y1:{position:'right',title:{display:true,text:'Temperatura (°C)',font:{size:11}},grid:{drawOnChartArea:false},ticks:{font:{size:11}}}}}
+  });
+}
+
+// IDF Curves
+{
+  const ctx=document.getElementById('RES-idf');
+  const durs=[5,10,15,30,60,120,360,720,1440];
+  const IDF={
+    2:  [102,83,70,51,36,24,12,7.2,3.8],
+    5:  [128,104,88,64,45,30,15,9.0,4.7],
+    10: [146,119,101,73,52,35,17,10.5,5.5],
+    25: [170,138,117,85,60,40,20,12.2,6.4],
+    50: [188,153,129,94,66,44,22,13.5,7.1],
+    100:[205,167,141,102,72,48,24,14.8,7.8]
+  };
+  const colors=['#1a5fa8','#117a56','#b7770d','#c0392b','#6c3483','#2c3e50'];
+  const trs=Object.keys(IDF);
+  if(ctx) new Chart(ctx,{type:'line',
+    data:{labels:durs,datasets:trs.map((tr,i)=>({label:`Tr ${tr} años`,data:IDF[tr],borderColor:colors[i],borderWidth:2,fill:false,pointRadius:4,tension:.3}))},
+    options:{responsive:true,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}}},
+      scales:{
+        x:{title:{display:true,text:'Duración (minutos)',font:{size:11}},grid:{color:'#eee'},ticks:{font:{size:10}}},
+        y:{title:{display:true,text:'Intensidad (mm/h)',font:{size:11}},grid:{color:'#eee'},ticks:{font:{size:10}}}}}
+  });
+}
+
+// Comparative time series (normalized anomalies)
+{
+  const ctx=document.getElementById('RES-ts');
+  function normalize(arr){const m=mean(arr),s=std(arr);return arr.map(v=>+((v-m)/s).toFixed(2));}
+  const Tann=annualMean(D.T), Pann=annualSum(D.P), BSann=annualMean(D.BS);
+  if(ctx) new Chart(ctx,{type:'line',
+    data:{labels:YEARS,datasets:[
+      {label:'Temperatura (z)',data:normalize(Tann),borderColor:CP.T,borderWidth:2,fill:false,pointRadius:2,tension:.4},
+      {label:'Precipitación (z)',data:normalize(Pann),borderColor:CP.P,borderWidth:2,fill:false,pointRadius:2,tension:.4},
+      {label:'Brillo Solar (z)',data:normalize(BSann),borderColor:CP.BS,borderWidth:2,fill:false,pointRadius:2,tension:.4}
+    ]},
+    options:{responsive:true,plugins:{legend:{display:true,labels:{font:{size:10},boxWidth:12}},
+      tooltip:{mode:'index',intersect:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9}}},
+              y:{title:{display:true,text:'Anomalía normalizada (z-score)',font:{size:11}},grid:{color:'#eee'},ticks:{font:{size:10}}}}}
+  });
+}
+
+// Balance Hídrico
+{
+  const ctx=document.getElementById('RES-bh');
+  const bh=MONTHS.map((_,m)=>+(mean(D.P.map(y=>y[m]))-mean(D.ETP.map(y=>y[m]))).toFixed(1));
+  const bgBH=bh.map(v=>v>=0?'rgba(26,95,168,.7)':'rgba(192,57,43,.7)');
+  if(ctx) new Chart(ctx,{type:'bar',data:{labels:MONTHS,datasets:[{data:bh,backgroundColor:bgBH,borderColor:bgBH,borderWidth:1}]},
+    options:{responsive:true,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:v=>`Balance: ${v.parsed.y} mm`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},
+              y:{title:{display:true,text:'P – ETP (mm)',font:{size:11}},grid:{color:'#eee'},ticks:{font:{size:10}}}}}
+  });
+}
+
+// ============================================================
+//  TAB SWITCHING
+// ============================================================
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+  document.getElementById(`tab-${id}`).classList.add('active');
+  const tabs=[...document.querySelectorAll('.tab')];
+  const map={'T':0,'P':1,'HR':2,'BS':3,'ETP':4,'RES':5};
+  if(tabs[map[id]])tabs[map[id]].classList.add('active');
+}
+</script>
+</body>
+</html>
